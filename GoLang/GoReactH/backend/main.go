@@ -24,7 +24,7 @@ func basic_route(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		res, err := json.Marshal(albums[0])
+		res, err := json.Marshal(albums[0:])
 		if err != nil {
 			log.Fatal(err)
 		}
