@@ -1,9 +1,9 @@
-import { connect, sendMsg } from "./api"
+import { getAlbums } from "./api"
 
 function App() {
   var send = () => {
     console.log("hello");
-    sendMsg("hello");
+    getAlbums();
   };
 
   return (

@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/go-sql-driver/mysql"
 	_ "modernc.org/sqlite"
 )
+import "os"
 
 type album struct {
 	ID     string  `json:"id"`
@@ -20,27 +22,60 @@ type db_wrap struct {
 	db *sql.DB
 }
 
-var lite db_wrap
+var dwrap db_wrap
 
 func main() {
+	var fns []func(dwrap *db_wrap) error
+	fns = append(fns, setuplite)
+	fns = append(fns, setupmysql)
 	var err error
-	lite.db, err = sql.Open("sqlite", "./experimeting.db")
+	err = fns[1](&dwrap)
 	if err != nil {
 		log.Fatal(err)
 	}
-	pingErr := lite.db.Ping()
+	pingErr := dwrap.db.Ping()
 	if pingErr != nil {
 		log.Fatal(pingErr)
 	}
 	fmt.Println("Conexion done")
 
-	err = lite.setupalbumtable()
+	err = dwrap.setupalbumtable()
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Seems your table has been correctly implemented")
+
+	albums, err := dwrap.albumsByArtist("John Coltrane")
+	fmt.Println(albums)
+	id, err := dwrap.addAlbum(album{"1", "Test", "Retest", 10})
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		fmt.Println(dwrap.albumByID(id))
+	}
+
 }
 
+func setuplite(dwrap *db_wrap) error {
+	var err error
+	dwrap.db, err = sql.Open("sqlite", "./experimeting.db")
+	return err
+}
+
+func setupmysql(dwrap *db_wrap) error {
+	var err error
+	cfg := mysql.Config{
+		User:   os.Getenv("DBUSER"),
+		Passwd: os.Getenv("DBPASS"),
+		Net:    "tcp",
+		Addr:   "127.0.0.1:3306",
+		DBName: "recordings",
+	}
+	dwrap.db, err = sql.Open("mysql", cfg.FormatDSN())
+	return err
+}
+
+//This one hax the syntax for sqlite, wont work on mysql, see "mysqltable.sql" for the corresponding syntax
 func (dwrap *db_wrap) setupalbumtable() error {
 	_, err := dwrap.db.Exec("DROP TABLE IF EXISTS album;")
 	if err != nil {

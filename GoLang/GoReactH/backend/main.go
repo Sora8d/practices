@@ -36,6 +36,6 @@ func basic_route(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	fmt.Println("Backend App v0.01")
-	http.HandleFunc("/", basic_route)
-	http.ListenAndServe(":8108", nil)
+	http.HandleFunc("/api/", basic_route)
+	http.ListenAndServe(":8081", nil)
 }
